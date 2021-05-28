@@ -9,7 +9,7 @@ using System.Collections.Generic;
 namespace CardApi.Controllers{
     [ApiController]
     [Route("cards")]
-    public class CardController : Controller{
+    public class CardController : ControllerBase{
         private readonly CardContext _context;
 
         public CardController(CardContext context){
@@ -19,7 +19,12 @@ namespace CardApi.Controllers{
         [Route("")]
         [HttpPost]
         public Card Cadastrar([FromForm] string email){
-            string numCard = GenerateCardNum.GerarNumero(); 
+            string numCard = GenerateCardNum.GerarNumero();
+            while(checkCard(numCard)){
+                numCard = GenerateCardNum.GerarNumero();
+                     if(!checkCard(numCard))
+                         break;
+            }
             Card card = new Card(email, numCard);
             _context.Cards.Add(card);
             _context.SaveChanges();
@@ -32,6 +37,16 @@ namespace CardApi.Controllers{
             IEnumerable<Card> listOfCards = _context.
                     Cards.Where(s => s.Email == email);
             return listOfCards;
+        }
+
+
+        public Boolean checkCard(string numCard){
+             IEnumerable<Card> buscaCartao = _context.Cards
+                .Where(s => s.CardNum == numCard);
+             if(buscaCartao.Count() != 0){
+                 return true;
+             }
+            return false;
         }
     }
 }
